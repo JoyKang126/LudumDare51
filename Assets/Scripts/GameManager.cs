@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
@@ -10,13 +11,18 @@ public class GameManager : MonoBehaviour
     [SerializeField] private SaltLevel saltBar;
     [SerializeField] private Transform ghost;
     [SerializeField] private PlayerMovement player;
+    [SerializeField] private ScoreScriptableObject score;
     // Start is called before the first frame update
 
     private float tenTimer = 10;
     private float oneTimer = 1;
     private float diffLvl = 1;
+
+    bool gameHasEnded = false;
+
     void Start()
     {
+        ResetScore();
         activateRandomProblems(Mathf.FloorToInt(diffLvl));
         healthBar.SetMaxHealth(100);
         saltBar.SetMaxSalt(100);
@@ -30,17 +36,25 @@ public class GameManager : MonoBehaviour
         {
             if (ghost.gameObject.activeSelf)
             {
-                ghost.gameObject.SetActive(false);
+                ghost.gameObject.GetComponent<GhostAI>().DeathAnim();
             }
+        }
+        if(healthBar.slider.value == 0)
+        {
+            EndGame(0);
+        }
+        if (timer.timeRemaining == 0 && healthBar.slider.value > 0)
+        {
+            EndGame(1);
         }
 
         if (ghost.gameObject.activeSelf)
         {
-            player.SetPlayerSpeed(15f);
+            player.SetPlayerSpeed(10f);
         }
         else
         {
-            player.SetPlayerSpeed(30f);
+            player.SetPlayerSpeed(20f);
         }
 
         if (tenTimer > 0)
@@ -50,7 +64,13 @@ public class GameManager : MonoBehaviour
         else
         {
             tenTimer = 10;
-            
+            if (diffLvl >= 3)
+            {
+                foreach(Transform child in problems)
+                {
+                    child.gameObject.GetComponent<ProblemController>().level3 = true;
+                }
+            }
             if (diffLvl >= 2)
                 diffLvl += 0.15f;
             else if (diffLvl >= 1)
@@ -67,7 +87,7 @@ public class GameManager : MonoBehaviour
         else
         {
             oneTimer = 1;
-            saltBar.SubSalt(3);
+            saltBar.SubSalt(2);
         }
     }
 
@@ -108,9 +128,32 @@ public class GameManager : MonoBehaviour
         Debug.Log(diceRoll);
         if (diceRoll > saltBar.slider.value)
         {
-            ghost.position = new Vector3(-7f, -3f, 0);
+            ghost.position = new Vector3(-3.25f, -2.25f, 0);
             ghost.gameObject.SetActive(true);
         }
             
+    }
+
+    void EndGame(int result)
+    {
+        if (gameHasEnded == false)
+        {
+            gameHasEnded = true;
+            if (result == 0)
+                SceneManager.LoadScene("Scenes/LoseScene");
+            else
+                SceneManager.LoadScene("Scenes/WinScene");
+        }
+    }
+
+    private void ResetScore()
+    {
+        score.tubs = 0;
+        score.beds = 0;
+        score.windows = 0;
+        score.doors = 0;
+        score.tvs = 0;
+        score.lights = 0;
+        score.cakes = 0;
     }
 }

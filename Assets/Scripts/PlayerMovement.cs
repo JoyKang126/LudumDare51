@@ -5,13 +5,17 @@ using UnityEngine;
 public class PlayerMovement : MonoBehaviour
 {
     [SerializeField] private SaltLevel saltBar;
+    [SerializeField] private AudioSource hammerSound;
+    [SerializeField] private AudioSource saltSound;
+    [SerializeField] private PauseMenu pauseMenu;
+
     public CharacterController2D controller;
     public Animator animator;
     public KeyCode fix;
     public KeyCode salt;
     float horizontalMove = 0f;
     bool jump = false;
-    public float runSpeed = 30f;
+    public float runSpeed = 20f;
     public Collider2D currentInterObj = null;
     // Start is called before the first frame update
     void Start()
@@ -22,6 +26,8 @@ public class PlayerMovement : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (!pauseMenu.paused)
+        {
         horizontalMove = Input.GetAxisRaw("Horizontal") * runSpeed;
         animator.SetFloat("Speed", Mathf.Abs(horizontalMove));
         if (Input.GetButtonDown("Jump"))
@@ -32,19 +38,23 @@ public class PlayerMovement : MonoBehaviour
 
         if (Input.GetKeyDown(fix))
         {
+            hammerSound.Play();
             StartCoroutine(FixCo());
-            
-            if (currentInterObj != null && currentInterObj.CompareTag ("problem")) 
+            Debug.Log("here");
+            if (currentInterObj != null && (currentInterObj.CompareTag ("problem") || currentInterObj.CompareTag ("saltproblem"))) 
             {
                 currentInterObj.gameObject.GetComponent<ProblemController>().decrementCounter();
             }
         }
         if (Input.GetKeyDown(salt))
         {
-            if (currentInterObj != null && currentInterObj.CompareTag ("salt")) 
+            saltSound.Play();
+            StartCoroutine(SaltCo());
+            if (currentInterObj != null && (currentInterObj.CompareTag ("salt") || currentInterObj.CompareTag ("saltproblem"))) 
             {
                 saltBar.AddSalt(10);
             }
+        }
         }
     }
     
@@ -79,6 +89,13 @@ public class PlayerMovement : MonoBehaviour
         animator.SetBool("IsFixing", true);
         yield return null;
         animator.SetBool("IsFixing", false);
+        yield return new WaitForSeconds(.3f);
+    }
+    private IEnumerator SaltCo()
+    {
+        animator.SetBool("IsSalting", true);
+        yield return null;
+        animator.SetBool("IsSalting", false);
         yield return new WaitForSeconds(.3f);
     }
 }

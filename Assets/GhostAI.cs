@@ -5,6 +5,8 @@ using Pathfinding;
 
 public class GhostAI : MonoBehaviour
 {
+    [SerializeField] private Animator animator;
+    [SerializeField] private AudioSource dieSound;
     public Transform target;
     public float speed = 200f;
     public float nextWaypointDistance = 3f;
@@ -16,6 +18,7 @@ public class GhostAI : MonoBehaviour
     Path path;
     int currentWaypoint = 0;
     bool reachedEndOfPath = false;
+    bool frozen = false;
 
     Seeker seeker;
     Rigidbody2D rb;
@@ -42,6 +45,11 @@ public class GhostAI : MonoBehaviour
             currentWaypoint = 0;
         }
     }
+
+    public void DeathAnim()
+    {
+        StartCoroutine(DieCo());
+    }
     /*
     void OnTriggerEnter2D(Collider2D other)
     {
@@ -64,35 +72,49 @@ public class GhostAI : MonoBehaviour
     // Update is called once per frame
     void FixedUpdate()
     {
-        if (path == null)
-            return;
-        if (currentWaypoint >= path.vectorPath.Count)
+        if (!frozen)
         {
-            reachedEndOfPath = true;
-            return;
-        }
-        else
-        {
-            reachedEndOfPath = false;
-        }
-        
-        Vector2 direction = ((Vector2)path.vectorPath[currentWaypoint] - rb.position).normalized;
-        Vector2 force = direction * speed * Time.deltaTime;
+            if (path == null)
+                return;
+            if (currentWaypoint >= path.vectorPath.Count)
+            {
+                reachedEndOfPath = true;
+                return;
+            }
+            else
+            {
+                reachedEndOfPath = false;
+            }
+            
+            Vector2 direction = ((Vector2)path.vectorPath[currentWaypoint] - rb.position).normalized;
+            Vector2 force = direction * speed * Time.deltaTime;
 
-        rb.AddForce(force);
+            rb.AddForce(force);
 
-        float distance = Vector2.Distance(rb.position, path.vectorPath[currentWaypoint]);
+            float distance = Vector2.Distance(rb.position, path.vectorPath[currentWaypoint]);
 
-        if (distance < nextWaypointDistance)
-            currentWaypoint++;
+            if (distance < nextWaypointDistance)
+                currentWaypoint++;
 
-        if(rb.velocity.x >= 0.01f && force.x >0f)
-        {
-            enemyGFX.localScale = new Vector3(-1f, 1f, 1f);
+            if(rb.velocity.x >= 0.01f && force.x >0f)
+            {
+                enemyGFX.localScale = new Vector3(-1f, 1f, 1f);
+            }
+            else if (rb.velocity.x <= -0.01f && force.x < 0f)
+            {
+                enemyGFX.localScale = new Vector3(1f, 1f, 1f);
+            }
         }
-        else if (rb.velocity.x <= -0.01f && force.x < 0f)
-        {
-            enemyGFX.localScale = new Vector3(1f, 1f, 1f);
-        }
+    }
+
+    private IEnumerator DieCo()
+    {
+        dieSound.Play();
+        frozen = true;
+        animator.SetBool("SaltFull", true);
+        yield return null;
+        yield return new WaitForSeconds(1.3f);
+        gameObject.SetActive(false);
+        frozen = false;
     }
 }

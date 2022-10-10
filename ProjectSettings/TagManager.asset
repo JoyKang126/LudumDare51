@@ -8,6 +8,7 @@ TagManager:
   - problem
   - ghost
   - salt
+  - saltproblem
   layers:
   - Default
   - TransparentFX
@@ -44,4 +45,16 @@ TagManager:
   m_SortingLayers:
   - name: Default
     uniqueID: 0
+    locked: 0
+  - name: background
+    uniqueID: 482819317
+    locked: 0
+  - name: furniture
+    uniqueID: 1198870689
+    locked: 0
+  - name: problem ui
+    uniqueID: 1595303099
+    locked: 0
+  - name: player
+    uniqueID: 668436473
     locked: 0
